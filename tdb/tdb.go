@@ -5,13 +5,16 @@ import (
 	"fmt"
 	"log"
 	"os"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
-import _ "github.com/go-sql-driver/mysql"
+var conn *sql.DB
 
-var (
-	conn *sql.DB
-)
+type base struct {
+	db    *sql.DB
+	table string
+}
 
 func init() {
 	var err error
