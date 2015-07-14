@@ -7,6 +7,7 @@ import (
 	"github.com/toomore/gogrs/cmd/twsereport/filter"
 	"github.com/toomore/gogrs/tradingdays"
 	"github.com/toomore/gogrs/twse"
+	"github.com/toomore/twsestock/tdb"
 )
 
 func doCheck(no string, recentlyOpened time.Time) []bool {
@@ -25,4 +26,6 @@ func main() {
 			log.Println(filter.AllList[i])
 		}
 	}
+	dailyreportdb := tdb.NewDailyReportDB()
+	dailyreportdb.InsertRecode("2618", 1, recentlyOpened)
 }
