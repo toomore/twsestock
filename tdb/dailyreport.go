@@ -3,6 +3,7 @@ package tdb
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"time"
 )
 
@@ -18,7 +19,12 @@ func NewDailyReportDB() *dailyreport {
 	}
 }
 
-func (d dailyreport) InsertRecode(no string, filterno uint64, date time.Time) {
-	insertRecodeSQL.Exec(no, filterno, date)
-	defer insertRecodeSQL.Close()
+func (d dailyreport) InsertRecode(no string, filterno uint64, date time.Time) (sql.Result, error) {
+	result, err := insertRecodeSQL.Exec(no, filterno, date)
+	log.Println(result.RowsAffected())
+	return result, err
+}
+
+func (d dailyreport) Close() error {
+	return insertRecodeSQL.Close()
 }
