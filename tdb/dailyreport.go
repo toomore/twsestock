@@ -23,9 +23,7 @@ func NewDailyReportDB() *dailyreport {
 }
 
 func (d dailyreport) InsertRecode(no string, filterno uint64, date time.Time) (sql.Result, error) {
-	result, err := insertRecodeSQL.Exec(no, filterno, date)
-	log.Println(result.RowsAffected())
-	return result, err
+	return insertRecodeSQL.Exec(no, filterno, date)
 }
 
 func (d dailyreport) Close() error {

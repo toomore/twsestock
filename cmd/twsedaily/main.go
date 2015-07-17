@@ -40,7 +40,7 @@ func main() {
 	dailyreportdb := tdb.NewDailyReportDB()
 	defer dailyreportdb.Close()
 
-	for _, sno := range gettwsecate("13", recentlyOpened) {
+	for _, sno := range gettwsecate("01", recentlyOpened) {
 		wg.Add(1)
 		go func(sno string, recentlyOpened time.Time) {
 			defer wg.Done()
@@ -51,7 +51,7 @@ func main() {
 					if _, err := dailyreportdb.InsertRecode(sno, uint64(i), recentlyOpened); err == nil {
 						log.Println(filter.AllList[i])
 					} else {
-						log.Println("InsertRecode Error", err)
+						log.Println("InsertRecode Error", sno, i, err)
 					}
 				}
 			}
