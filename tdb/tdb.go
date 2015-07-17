@@ -10,6 +10,8 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+const MaxConns = 100
+
 var conn *sql.DB
 var ErrorInInit = errors.New("Error in init tdb")
 
@@ -24,4 +26,5 @@ func init() {
 		os.Getenv("dbuser"), os.Getenv("dbpwd"), os.Getenv("dbdbs"))); err != nil {
 		log.Fatalln(ErrorInInit, err)
 	}
+	conn.SetMaxOpenConns(MaxConns)
 }

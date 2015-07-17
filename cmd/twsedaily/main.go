@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"runtime"
 	"sync"
@@ -13,6 +14,7 @@ import (
 )
 
 var wg sync.WaitGroup
+var twsecate = flag.String("twsecate", "", "twse cate")
 
 func doCheck(stock *twse.Data, recentlyOpened time.Time) []bool {
 	result := make([]bool, len(filter.AllList))
@@ -36,11 +38,12 @@ func init() {
 }
 
 func main() {
+	flag.Parse()
 	recentlyOpened := tradingdays.FindRecentlyOpened(time.Now())
 	dailyreportdb := tdb.NewDailyReportDB()
 	defer dailyreportdb.Close()
 
-	for _, sno := range gettwsecate("01", recentlyOpened) {
+	for _, sno := range gettwsecate(*twsecate, recentlyOpened) {
 		wg.Add(1)
 		go func(sno string, recentlyOpened time.Time) {
 			defer wg.Done()
