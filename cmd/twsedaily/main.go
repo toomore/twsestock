@@ -48,8 +48,11 @@ func main() {
 			stock := twse.NewTWSE(sno, recentlyOpened)
 			for i, result := range doCheck(stock, recentlyOpened) {
 				if result {
-					dailyreportdb.InsertRecode(sno, uint64(i), recentlyOpened)
-					log.Println(filter.AllList[i])
+					if _, err := dailyreportdb.InsertRecode(sno, uint64(i), recentlyOpened); err == nil {
+						log.Println(filter.AllList[i])
+					} else {
+						log.Println("InsertRecode Error", err)
+					}
 				}
 			}
 		}(sno, recentlyOpened)
