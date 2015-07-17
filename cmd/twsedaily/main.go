@@ -16,7 +16,7 @@ import (
 var wg sync.WaitGroup
 var twsecate = flag.String("twsecate", "", "twse cate")
 
-func doCheck(stock *twse.Data, recentlyOpened time.Time) []bool {
+func doCheck(stock *twse.Data) []bool {
 	result := make([]bool, len(filter.AllList))
 	for i, filterFunc := range filter.AllList {
 		result[i] = filterFunc.CheckFunc(stock)
@@ -43,22 +43,28 @@ func main() {
 	dailyreportdb := tdb.NewDailyReportDB()
 	defer dailyreportdb.Close()
 
-	for _, sno := range gettwsecate(*twsecate, recentlyOpened) {
-		wg.Add(1)
-		go func(sno string, recentlyOpened time.Time) {
+	var stockList = make([]*twse.Data, 0)
+	if *twsecate != "" {
+		for _, sno := range gettwsecate(*twsecate, recentlyOpened) {
+			stockList = append(stockList, twse.NewTWSE(sno, recentlyOpened))
+		}
+	}
+
+	wg.Add(len(stockList))
+	for _, stock := range stockList {
+		go func(stock *twse.Data, recentlyOpened time.Time) {
 			defer wg.Done()
 			runtime.Gosched()
-			stock := twse.NewTWSE(sno, recentlyOpened)
-			for i, result := range doCheck(stock, recentlyOpened) {
+			for i, result := range doCheck(stock) {
 				if result {
-					if _, err := dailyreportdb.InsertRecode(sno, uint64(i), recentlyOpened); err == nil {
+					if _, err := dailyreportdb.InsertRecode(stock.No, uint64(i), recentlyOpened); err == nil {
 						log.Println(filter.AllList[i])
 					} else {
-						log.Println("InsertRecode Error", sno, i, err)
+						log.Println("InsertRecode Error", stock.No, i, err)
 					}
 				}
 			}
-		}(sno, recentlyOpened)
+		}(stock, recentlyOpened)
 	}
 	wg.Wait()
 }
