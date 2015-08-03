@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -44,24 +45,33 @@ func init() {
 	runtime.GOMAXPROCS(runtime.NumCPU() * 4)
 }
 
+func makeStockList(twsecae *string, otccate *string, recentlyOpened time.Time) []*twse.Data {
+	var stockList = make([]*twse.Data, 0)
+	if *twsecate != "" {
+		for _, twsecateno := range strings.Split(*twsecate, ",") {
+			for _, sno := range gettwsecate(true, twsecateno, recentlyOpened) {
+				stockList = append(stockList, twse.NewTWSE(sno, recentlyOpened))
+			}
+		}
+	}
+
+	if *otccate != "" {
+		for _, otccateno := range strings.Split(*otccate, ",") {
+			for _, sno := range gettwsecate(false, otccateno, recentlyOpened) {
+				stockList = append(stockList, twse.NewOTC(sno, recentlyOpened))
+			}
+		}
+	}
+	return stockList
+}
+
 func main() {
 	flag.Parse()
 	recentlyOpened := tradingdays.FindRecentlyOpened(time.Now())
 	dailyreportdb := tdb.NewDailyReportDB()
 	defer dailyreportdb.Close()
 
-	var stockList = make([]*twse.Data, 0)
-	if *twsecate != "" {
-		for _, sno := range gettwsecate(true, *twsecate, recentlyOpened) {
-			stockList = append(stockList, twse.NewTWSE(sno, recentlyOpened))
-		}
-	}
-
-	if *otccate != "" {
-		for _, sno := range gettwsecate(false, *otccate, recentlyOpened) {
-			stockList = append(stockList, twse.NewOTC(sno, recentlyOpened))
-		}
-	}
+	stockList := makeStockList(twsecate, otccate, recentlyOpened)
 
 	wg.Add(len(stockList))
 	for _, stock := range stockList {
