@@ -15,6 +15,7 @@ import (
 
 var wg sync.WaitGroup
 var twsecate = flag.String("twsecate", "", "twse cate")
+var otccate = flag.String("otccate", "", "otc cate")
 
 func doCheck(stock *twse.Data) []bool {
 	result := make([]bool, len(filter.AllList))
@@ -24,8 +25,14 @@ func doCheck(stock *twse.Data) []bool {
 	return result
 }
 
-func gettwsecate(cate string, date time.Time) []string {
-	l := twse.NewLists(date)
+func gettwsecate(isTwse bool, cate string, date time.Time) []string {
+	var l twse.BaseLists
+	switch isTwse {
+	case true:
+		l = twse.NewLists(date)
+	default:
+		l = twse.NewOTCLists(date)
+	}
 	var result []string
 	for _, s := range l.GetCategoryList(cate) {
 		result = append(result, s.No)
@@ -45,8 +52,14 @@ func main() {
 
 	var stockList = make([]*twse.Data, 0)
 	if *twsecate != "" {
-		for _, sno := range gettwsecate(*twsecate, recentlyOpened) {
+		for _, sno := range gettwsecate(true, *twsecate, recentlyOpened) {
 			stockList = append(stockList, twse.NewTWSE(sno, recentlyOpened))
+		}
+	}
+
+	if *otccate != "" {
+		for _, sno := range gettwsecate(false, *otccate, recentlyOpened) {
+			stockList = append(stockList, twse.NewOTC(sno, recentlyOpened))
 		}
 	}
 
@@ -58,7 +71,7 @@ func main() {
 			for i, result := range doCheck(stock) {
 				if result {
 					if _, err := dailyreportdb.InsertRecode(stock.No, uint64(i), recentlyOpened); err == nil {
-						log.Println(filter.AllList[i])
+						log.Println(stock.No, filter.AllList[i])
 					} else {
 						log.Println("InsertRecode Error", stock.No, i, err)
 					}
