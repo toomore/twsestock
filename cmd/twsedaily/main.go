@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"os"
 	"runtime"
 	"strings"
 	"sync"
@@ -69,6 +70,12 @@ func makeStockList(twsecae *string, otccate *string, recentlyOpened time.Time) [
 
 func main() {
 	flag.Parse()
+
+	if flag.NFlag() == 0 {
+		flag.PrintDefaults()
+		os.Exit(0)
+	}
+
 	recentlyOpened := tradingdays.FindRecentlyOpened(time.Now())
 	dailyreportdb := tdb.NewDailyReportDB()
 	defer dailyreportdb.Close()
