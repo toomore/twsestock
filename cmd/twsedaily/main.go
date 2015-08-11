@@ -14,9 +14,15 @@ import (
 	"github.com/toomore/twsestock/tdb"
 )
 
-var wg sync.WaitGroup
-var twsecate = flag.String("twsecate", "", "twse cate")
-var otccate = flag.String("otccate", "", "otc cate")
+var (
+	otccate  = flag.String("otccate", "", "otc cate")
+	twsecate = flag.String("twsecate", "", "twse cate")
+	wg       sync.WaitGroup
+)
+
+func init() {
+	runtime.GOMAXPROCS(runtime.NumCPU() * 4)
+}
 
 func doCheck(stock *twse.Data) []bool {
 	result := make([]bool, len(filter.AllList))
@@ -39,10 +45,6 @@ func gettwsecate(isTwse bool, cate string, date time.Time) []string {
 		result = append(result, s.No)
 	}
 	return result
-}
-
-func init() {
-	runtime.GOMAXPROCS(runtime.NumCPU() * 4)
 }
 
 func makeStockList(twsecae *string, otccate *string, recentlyOpened time.Time) []*twse.Data {
