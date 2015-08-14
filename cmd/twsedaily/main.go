@@ -12,13 +12,15 @@ import (
 	"github.com/toomore/gogrs/cmd/twsereport/filter"
 	"github.com/toomore/gogrs/tradingdays"
 	"github.com/toomore/gogrs/twse"
+	"github.com/toomore/gogrs/utils"
 	"github.com/toomore/twsestock/tdb"
 )
 
 var (
-	otccate  = flag.String("otccate", "", "otc cate")
-	twsecate = flag.String("twsecate", "", "twse cate")
-	wg       sync.WaitGroup
+	flushcache = flag.Bool("flushcache", false, "clear cache")
+	otccate    = flag.String("otccate", "", "otc cate")
+	twsecate   = flag.String("twsecate", "", "twse cate")
+	wg         sync.WaitGroup
 )
 
 func init() {
@@ -74,6 +76,10 @@ func main() {
 	if flag.NFlag() == 0 {
 		flag.PrintDefaults()
 		os.Exit(0)
+	}
+
+	if *flushcache {
+		utils.NewHTTPCache(utils.GetOSRamdiskPath(), "utf8").FlushAll()
 	}
 
 	recentlyOpened := tradingdays.FindRecentlyOpened(time.Now())
