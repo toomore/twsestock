@@ -4,3 +4,4 @@ CREATE TABLE IF NOT EXISTS filterinfo (
     timestamp TIMESTAMP NOT NULL,
     PRIMARY KEY(no)
     )
+CHARACTER SET 'utf8';

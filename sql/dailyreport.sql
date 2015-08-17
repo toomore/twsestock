@@ -4,3 +4,4 @@ CREATE TABLE IF NOT EXISTS dailyreport (
     timestamp TIMESTAMP NOT NULL,
     PRIMARY KEY(no, filter, timestamp)
     )
+CHARACTER SET 'utf8';
