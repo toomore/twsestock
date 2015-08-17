@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"runtime"
@@ -17,10 +18,11 @@ import (
 )
 
 var (
-	flushcache = flag.Bool("flushcache", false, "clear cache")
-	otccate    = flag.String("otccate", "", "otc cate")
-	twsecate   = flag.String("twsecate", "", "twse cate")
-	wg         sync.WaitGroup
+	flushcache   = flag.Bool("flushcache", false, "clear cache")
+	otccate      = flag.String("otccate", "", "otc cate")
+	updateFilter = flag.Bool("updatefilter", false, "Print filter info")
+	twsecate     = flag.String("twsecate", "", "twse cate")
+	wg           sync.WaitGroup
 )
 
 func init() {
@@ -70,6 +72,15 @@ func makeStockList(twsecae *string, otccate *string, recentlyOpened time.Time) [
 	return stockList
 }
 
+func updateFilterInfo() {
+	filterinfodb := tdb.NewFilterinfoDB()
+	defer filterinfodb.Close()
+	for _, v := range filter.AllList {
+		fmt.Println(v.No(), v)
+		filterinfodb.InsertFilterinfo(v.No(), v.String())
+	}
+}
+
 func main() {
 	flag.Parse()
 
@@ -80,6 +91,10 @@ func main() {
 
 	if *flushcache {
 		utils.NewHTTPCache(utils.GetOSRamdiskPath(), "utf8").FlushAll()
+	}
+
+	if *updateFilter {
+		updateFilterInfo()
 	}
 
 	recentlyOpened := tradingdays.FindRecentlyOpened(time.Now())
