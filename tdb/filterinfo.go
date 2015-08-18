@@ -21,7 +21,7 @@ func NewFilterinfoDB() *filterinfo {
 	}
 }
 
-func (filterinfo) InsertFilterinfo(no int64, desc string) (sql.Result, error) {
+func (filterinfo) InsertFilterinfo(no uint64, desc string) (sql.Result, error) {
 	return insertFilterinfoSQL.Exec(no, desc, no, desc)
 }
 
