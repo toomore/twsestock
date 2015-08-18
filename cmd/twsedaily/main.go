@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -10,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/codegangsta/cli"
 	"github.com/toomore/gogrs/cmd/twsereport/filter"
 	"github.com/toomore/gogrs/tradingdays"
 	"github.com/toomore/gogrs/twse"
@@ -18,10 +18,10 @@ import (
 )
 
 var (
-	flushcache   = flag.Bool("flushcache", false, "clear cache")
-	otccate      = flag.String("otccate", "", "otc cate")
-	updateFilter = flag.Bool("updatefilter", false, "Print filter info")
-	twsecate     = flag.String("twsecate", "", "twse cate")
+	flushcache   bool
+	otccate      string
+	twsecate     string
+	updateFilter bool
 	wg           sync.WaitGroup
 )
 
@@ -52,18 +52,18 @@ func gettwsecate(isTwse bool, cate string, date time.Time) []string {
 	return result
 }
 
-func makeStockList(twsecae *string, otccate *string, recentlyOpened time.Time) []*twse.Data {
+func makeStockList(twsecae string, otccate string, recentlyOpened time.Time) []*twse.Data {
 	var stockList = make([]*twse.Data, 0)
-	if *twsecate != "" {
-		for _, twsecateno := range strings.Split(*twsecate, ",") {
+	if twsecate != "" {
+		for _, twsecateno := range strings.Split(twsecate, ",") {
 			for _, sno := range gettwsecate(true, twsecateno, recentlyOpened) {
 				stockList = append(stockList, twse.NewTWSE(sno, recentlyOpened))
 			}
 		}
 	}
 
-	if *otccate != "" {
-		for _, otccateno := range strings.Split(*otccate, ",") {
+	if otccate != "" {
+		for _, otccateno := range strings.Split(otccate, ",") {
 			for _, sno := range gettwsecate(false, otccateno, recentlyOpened) {
 				stockList = append(stockList, twse.NewOTC(sno, recentlyOpened))
 			}
@@ -82,18 +82,48 @@ func updateFilterInfo() {
 }
 
 func main() {
-	flag.Parse()
+	app := cli.NewApp()
+	app.Name = "twsedaily"
+	app.Usage = "Get daily data and into DB."
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "twsecate",
+			Value: "",
+			Usage: "twsecate no",
+		},
+		cli.StringFlag{
+			Name:  "otccate",
+			Value: "",
+			Usage: "otccate no",
+		},
+		cli.BoolFlag{
+			Name:  "flushcache",
+			Usage: "clear cache",
+		},
+		cli.BoolFlag{
+			Name:  "updatefilter",
+			Usage: "update filter",
+		},
+	}
+	app.Action = func(c *cli.Context) {
+		if c.NumFlags() == 0 {
+			cli.ShowAppHelp(c)
+			os.Exit(0)
+		}
+		flushcache = c.Bool("flushcache")
+		otccate = c.String("otccate")
+		twsecate = c.String("twsecate")
+		updateFilter = c.Bool("updatefilter")
+	}
+	app.Run(os.Args)
 
-	if flag.NFlag() == 0 {
-		flag.PrintDefaults()
-		os.Exit(0)
+	if flushcache {
+		temppath := utils.GetOSRamdiskPath()
+		utils.NewHTTPCache(temppath, "utf8").FlushAll()
+		log.Println("Clear cache", temppath)
 	}
 
-	if *flushcache {
-		utils.NewHTTPCache(utils.GetOSRamdiskPath(), "utf8").FlushAll()
-	}
-
-	if *updateFilter {
+	if updateFilter {
 		updateFilterInfo()
 	}
 
