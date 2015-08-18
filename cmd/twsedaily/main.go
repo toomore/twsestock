@@ -140,7 +140,7 @@ func main() {
 			runtime.Gosched()
 			for i, result := range doCheck(stock) {
 				if result {
-					if _, err := dailyreportdb.InsertRecode(stock.No, uint64(i), recentlyOpened); err == nil {
+					if _, err := dailyreportdb.InsertRecode(stock.No, uint64(filter.AllList[i].No()), recentlyOpened); err == nil {
 						log.Println(stock.No, filter.AllList[i])
 					} else {
 						log.Println("InsertRecode Error", stock.No, i, err)
